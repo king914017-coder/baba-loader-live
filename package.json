@@ -1,10 +1,4 @@
 {
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1"
-  }
-}
-{
   "name": "loader-panel",
   "version": "1.0.0",
   "description": "Mobile Loader Panel",
