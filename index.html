@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Loader Panel</title>
+    <title>Reseller Panel</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: #fff; padding: 15px; margin: 0; }
-        .box { background: #1e1e1e; padding: 20px; border-radius: 8px; }
-        select, button { padding: 10px; margin: 5px 0; width: 100%; font-size: 16px; border-radius: 5px; }
-        button { background: #00adb5; color: white; border: none; font-weight: bold; }
+        body { font-family: 'Arial', sans-serif; background: #121212; color: #fff; padding: 15px; margin: 0; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 8px; max-width: 800px; margin: auto; }
+        input, select, button { padding: 10px; margin: 8px 0; width: 100%; font-size: 16px; border-radius: 5px; box-sizing: border-box; }
+        input, select { background: #2a2a2a; color: white; border: 1px solid #444; }
+        button { background: #00adb5; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #007c82; }
+        .admin-btn { background: #ff5722; }
+        .admin-btn:hover { background: #e64a19; }
+        .logout-btn { background: #dc3545; }
         table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 14px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
         th { background: #333; color: #00adb5; }
-        .unused { color: #ffc107; } .active { color: #28a745; } .expired { color: #dc3545; }
+        .hidden { display: none; }
+        .toggle-link { color: #00adb5; cursor: pointer; text-align: center; display: block; margin-top: 10px; }
         
-        /* Mobile responsive table */
         @media (max-width: 600px) {
             table, thead, tbody, th, td, tr { display: block; }
             th { display: none; }
@@ -25,16 +30,44 @@
 </head>
 <body>
 
-<div class="box">
-    <h2 style="text-align: center; color: #00adb5;">🔑 Mobile Key Panel</h2>
+<!-- LOGIN & REGISTER SCREEN -->
+<div id="authScreen" class="box">
+    <h2 style="text-align: center; color: #00adb5;">🔐 Baba Panel Auth</h2>
     
+    <!-- Login Form -->
+    <div id="loginForm">
+        <input type="text" id="logUser" placeholder="Username">
+        <input type="password" id="logPass" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <span class="toggle-link" onclick="toggleAuth()">Naye User Ho? Naya Account Banao</span>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" class="hidden">
+        <input type="text" id="regUser" placeholder="Naya Username">
+        <input type="password" id="regPass" placeholder="Naya Password">
+        <input type="text" id="regInvite" placeholder="Admin Ka Invite Code">
+        <button onclick="register()">Register</button>
+        <span class="toggle-link" onclick="toggleAuth()">Pehle se Account hai? Login karo</span>
+    </div>
+</div>
+
+<!-- MAIN DASHBOARD SCREEN -->
+<div id="dashboardScreen" class="box hidden">
+    <h2 style="text-align: center; color: #00adb5;">🚀 <span id="welcomeName"></span>'s Panel</h2>
+    
+    <div id="adminPanel" class="hidden" style="border: 1px dashed #ff5722; padding: 10px; margin-bottom: 15px;">
+        <h4 style="margin: 0 0 10px 0; color: #ff5722;">👑 Admin Zone</h4>
+        <button class="admin-btn" onclick="generateInvite()">🎟️ Naya Invite Code Banao (Reseller Ke Liye)</button>
+    </div>
+
     <select id="duration">
         <option value="1">1 Day</option>
         <option value="7">7 Days</option>
         <option value="30">30 Days</option>
-        <option value="365">Lifetime (1 Yr)</option>
     </select>
-    <button onclick="generateKey()">Generate New Key</button>
+    <button onclick="generateKey()">➕ Generate New Key</button>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
 
     <table>
         <tbody id="keysTable"></tbody>
@@ -44,36 +77,116 @@
 <script>
     const API_URL = "/api";
 
-    async function loadKeys() {
-        const res = await fetch(`${API_URL}/keys`);
-        const keys = await res.json();
-        const table = document.getElementById('keysTable');
-        table.innerHTML = "";
-        keys.forEach(k => {
-            table.innerHTML += `
-                <tr>
-                    <td data-label="Key">${k.key}</td>
-                    <td data-label="Duration">${k.durationDays} Days</td>
-                    <td data-label="Status" class="${k.status.toLowerCase()}">${k.status}</td>
-                    <td data-label="HWID">${k.hwid ? k.hwid.substring(0,8)+'...' : '---'}</td>
-                </tr>`;
+    // Request me headers jodne ka helper function
+    function getAuthHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'x-username': localStorage.getItem('panel_user'),
+            'x-password': localStorage.getItem('panel_pass')
+        };
+    }
+
+    function toggleAuth() {
+        document.getElementById('loginForm').classList.toggle('hidden');
+        document.getElementById('registerForm').classList.toggle('hidden');
+    }
+
+    async function login() {
+        const u = document.getElementById('logUser').value;
+        const p = document.getElementById('logPass').value;
+        const res = await fetch(`${API_URL}/login`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: u, password: p})
         });
+        const data = await res.json();
+        if(data.success) {
+            localStorage.setItem('panel_user', u);
+            localStorage.setItem('panel_pass', p);
+            localStorage.setItem('panel_role', data.role);
+            checkLoginState();
+        } else { alert(data.message); }
+    }
+
+    async function register() {
+        const u = document.getElementById('regUser').value;
+        const p = document.getElementById('regPass').value;
+        const i = document.getElementById('regInvite').value;
+        const res = await fetch(`${API_URL}/register`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: u, password: p, inviteCode: i})
+        });
+        const data = await res.json();
+        alert(data.message);
+        if(data.success) toggleAuth(); // Register hone par wapas login pe bhej do
+    }
+
+    function logout() {
+        localStorage.clear();
+        checkLoginState();
+    }
+
+    // Dashboard Load Hone Ka Function
+    function checkLoginState() {
+        const user = localStorage.getItem('panel_user');
+        const role = localStorage.getItem('panel_role');
+        
+        if (user) {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            document.getElementById('welcomeName').innerText = user.toUpperCase();
+            
+            // Agar Admin hai, toh Invite banane ka option dikhao
+            if(role === 'admin') document.getElementById('adminPanel').classList.remove('hidden');
+            else document.getElementById('adminPanel').classList.add('hidden');
+            
+            loadKeys();
+        } else {
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('dashboardScreen').classList.add('hidden');
+        }
+    }
+
+    async function generateInvite() {
+        const res = await fetch(`${API_URL}/create_invite`, { method: 'POST', headers: getAuthHeaders() });
+        const data = await res.json();
+        if(data.success) alert("Reseller Invite Code (Ise Copy Kar Lein):\n\n" + data.invite);
+        else alert(data.message);
     }
 
     async function generateKey() {
         const duration = document.getElementById('duration').value;
         const res = await fetch(`${API_URL}/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: getAuthHeaders(),
             body: JSON.stringify({ durationDays: duration })
         });
         const data = await res.json();
-        if(data.success) {
-            alert("Key Generated:\n" + data.key);
-            loadKeys();
+        if(data.success) { alert("Key Generated:\n" + data.key); loadKeys(); }
+        else { alert("Error: Auth Failed"); logout(); }
+    }
+
+    async function loadKeys() {
+        const res = await fetch(`${API_URL}/keys`, { headers: getAuthHeaders() });
+        if(res.status === 401) return logout(); // Agar password change ho gaya toh bahar phek do
+        
+        const keys = await res.json();
+        const table = document.getElementById('keysTable');
+        table.innerHTML = "";
+        
+        // Ulta loop chalayenge taaki nayi keys sabse upar dikhein
+        for (let i = keys.length - 1; i >= 0; i--) {
+            let k = keys[i];
+            table.innerHTML += `
+                <tr>
+                    <td data-label="Key"><strong>${k.key}</strong></td>
+                    <td data-label="Days">${k.durationDays}D</td>
+                    <td data-label="Status">[${k.status}]</td>
+                    <td data-label="Owner" style="color: #aaa; font-size:12px;">Made by: ${k.owner}</td>
+                </tr>`;
         }
     }
-    loadKeys();
+
+    // Page khulte hi check karo ki login hai ya nahi
+    checkLoginState();
 </script>
 </body>
 </html>
