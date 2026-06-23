@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Loader Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #121212; color: #fff; padding: 15px; margin: 0; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 8px; }
+        select, button { padding: 10px; margin: 5px 0; width: 100%; font-size: 16px; border-radius: 5px; }
+        button { background: #00adb5; color: white; border: none; font-weight: bold; }
+        table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
+        th { background: #333; color: #00adb5; }
+        .unused { color: #ffc107; } .active { color: #28a745; } .expired { color: #dc3545; }
+        
+        /* Mobile responsive table */
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            th { display: none; }
+            td { position: relative; padding-left: 50%; text-align: right; }
+            td::before { content: attr(data-label); position: absolute; left: 10px; font-weight: bold; text-align: left; color: #00adb5; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2 style="text-align: center; color: #00adb5;">🔑 Mobile Key Panel</h2>
+    
+    <select id="duration">
+        <option value="1">1 Day</option>
+        <option value="7">7 Days</option>
+        <option value="30">30 Days</option>
+        <option value="365">Lifetime (1 Yr)</option>
+    </select>
+    <button onclick="generateKey()">Generate New Key</button>
+
+    <table>
+        <tbody id="keysTable"></tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = "/api";
+
+    async function loadKeys() {
+        const res = await fetch(`${API_URL}/keys`);
+        const keys = await res.json();
+        const table = document.getElementById('keysTable');
+        table.innerHTML = "";
+        keys.forEach(k => {
+            table.innerHTML += `
+                <tr>
+                    <td data-label="Key">${k.key}</td>
+                    <td data-label="Duration">${k.durationDays} Days</td>
+                    <td data-label="Status" class="${k.status.toLowerCase()}">${k.status}</td>
+                    <td data-label="HWID">${k.hwid ? k.hwid.substring(0,8)+'...' : '---'}</td>
+                </tr>`;
+        });
+    }
+
+    async function generateKey() {
+        const duration = document.getElementById('duration').value;
+        const res = await fetch(`${API_URL}/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ durationDays: duration })
+        });
+        const data = await res.json();
+        if(data.success) {
+            alert("Key Generated:\n" + data.key);
+            loadKeys();
+        }
+    }
+    loadKeys();
+</script>
+</body>
+</html>
