@@ -27,7 +27,7 @@ const writeJSON = (file, data) => {
 
 // Start hote hi files setup karein (Aapka Main Admin Account Yahan Hai 👇)
 readJSON(DB_FILE, []);
-readJSON(USERS_FILE, [{ username: "admin", password: "Baba@123", role: "admin" }]);
+readJSON(USERS_FILE, [{ username: "Baba_Admin", password: "Mishra@123", role: "admin" }]);
 readJSON(INVITES_FILE, []);
 
 // 🛡️ SECURITY MIDDLEWARE (Check karega ki user asli hai ya nahi)
