@@ -7,6 +7,16 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(cors());
+const rateLimit = require('express-rate-limit');
+
+const apiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 5,
+    message: { status: "failed", message: "🚫 Too many attempts, try after 1 minute." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 
 const DB_FILE = './database.json';
 const USERS_FILE = './users.json';
@@ -152,7 +162,7 @@ app.get('/api/keys', authenticate, (req, res) => {
 });
 
 
-app.post('/api/validate', (req, res) => {
+app.post('/api/validate', apiLimiter, (req, res) => {
     const { key, hwid } = req.body;
     if (!key || !hwid) return res.status(400).json({ status: "failed", message: "Key and HWID required!" });
 
