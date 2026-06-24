@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reseller Panel</title>
+    <title>Baba Premium Panel</title>
     <style>
         body { font-family: 'Arial', sans-serif; background: #121212; color: #fff; padding: 15px; margin: 0; }
         .box { background: #1e1e1e; padding: 20px; border-radius: 8px; max-width: 800px; margin: auto; }
@@ -14,11 +14,14 @@
         .admin-btn { background: #ff5722; }
         .admin-btn:hover { background: #e64a19; }
         .logout-btn { background: #dc3545; }
+        .block-btn { background: #dc3545; padding: 5px; font-size: 12px; width: auto; margin:0;}
+        .unblock-btn { background: #28a745; padding: 5px; font-size: 12px; width: auto; margin:0;}
         table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 14px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
         th { background: #333; color: #00adb5; }
         .hidden { display: none; }
         .toggle-link { color: #00adb5; cursor: pointer; text-align: center; display: block; margin-top: 10px; }
+        .admin-zone { border: 1px dashed #ff5722; padding: 15px; margin-bottom: 15px; border-radius: 8px; background: rgba(255, 87, 34, 0.05); }
         
         @media (max-width: 600px) {
             table, thead, tbody, th, td, tr { display: block; }
@@ -30,54 +33,68 @@
 </head>
 <body>
 
-<!-- LOGIN & REGISTER SCREEN -->
 <div id="authScreen" class="box">
     <h2 style="text-align: center; color: #00adb5;">🔐 Baba Panel Auth</h2>
     
-    <!-- Login Form -->
     <div id="loginForm">
         <input type="text" id="logUser" placeholder="Username">
         <input type="password" id="logPass" placeholder="Password">
         <button onclick="login()">Login</button>
-        <span class="toggle-link" onclick="toggleAuth()">New user|Create new account</span>
+        <span class="toggle-link" onclick="toggleAuth()">Naye User Ho? Naya Account Banao</span>
     </div>
 
-    <!-- Register Form -->
     <div id="registerForm" class="hidden">
-        <input type="text" id="regUser" placeholder="New Username">
-        <input type="password" id="regPass" placeholder="New Password">
-        <input type="text" id="regInvite" placeholder="Pass Code">
+        <input type="text" id="regUser" placeholder="Naya Username">
+        <input type="password" id="regPass" placeholder="Naya Password">
+        <input type="text" id="regInvite" placeholder="Admin Ka Invite Code">
         <button onclick="register()">Register</button>
-        <span class="toggle-link" onclick="toggleAuth()">Already have an account|Login</span>
+        <span class="toggle-link" onclick="toggleAuth()">Pehle se Account hai? Login karo</span>
     </div>
 </div>
 
-<!-- MAIN DASHBOARD SCREEN -->
 <div id="dashboardScreen" class="box hidden">
     <h2 style="text-align: center; color: #00adb5;">🚀 <span id="welcomeName"></span>'s Panel</h2>
     
-    <div id="adminPanel" class="hidden" style="border: 1px dashed #ff5722; padding: 10px; margin-bottom: 15px;">
-        <h4 style="margin: 0 0 10px 0; color: #ff5722;">👑 Admin Zone</h4>
-        <button class="admin-btn" onclick="generateInvite()">🎟️ Create New Invite Code</button>
+    <div id="adminPanel" class="admin-zone hidden">
+        <h3 style="margin: 0 0 10px 0; color: #ff5722;">👑 Admin Zone (Reseller Management)</h3>
+        <button class="admin-btn" onclick="generateInvite()">🎟️ Naya Invite Code Banao</button>
+        
+        <table style="margin-top: 15px;">
+            <thead>
+                <tr>
+                    <th>Reseller Name</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="resellersTable"></tbody>
+        </table>
     </div>
 
+    <hr style="border-color: #333;">
+
+    <h3>🔑 Create New Key</h3>
+    <input type="text" id="customKey" placeholder="Custom Key (Optional) - Leave blank for Random">
     <select id="duration">
         <option value="1">1 Day</option>
         <option value="7">7 Days</option>
         <option value="30">30 Days</option>
     </select>
-    <button onclick="generateKey()">➕ Generate New Key</button>
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    <button onclick="generateKey()">➕ Generate Key</button>
+    
+    <hr style="border-color: #333;">
 
+    <h3>📋 Keys List</h3>
     <table>
         <tbody id="keysTable"></tbody>
     </table>
+    
+    <button class="logout-btn" style="margin-top:20px;" onclick="logout()">🚪 Logout</button>
 </div>
 
 <script>
     const API_URL = "/api";
 
-    // Request me headers jodne ka helper function
     function getAuthHeaders() {
         return {
             'Content-Type': 'application/json',
@@ -117,7 +134,7 @@
         });
         const data = await res.json();
         alert(data.message);
-        if(data.success) toggleAuth(); // Register hone par wapas login pe bhej do
+        if(data.success) toggleAuth(); 
     }
 
     function logout() {
@@ -125,7 +142,6 @@
         checkLoginState();
     }
 
-    // Dashboard Load Hone Ka Function
     function checkLoginState() {
         const user = localStorage.getItem('panel_user');
         const role = localStorage.getItem('panel_role');
@@ -135,9 +151,12 @@
             document.getElementById('dashboardScreen').classList.remove('hidden');
             document.getElementById('welcomeName').innerText = user.toUpperCase();
             
-            // Agar Admin hai, toh Invite banane ka option dikhao
-            if(role === 'admin') document.getElementById('adminPanel').classList.remove('hidden');
-            else document.getElementById('adminPanel').classList.add('hidden');
+            if(role === 'admin') {
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadResellers(); // Admin hai toh resellers ki list laao
+            } else {
+                document.getElementById('adminPanel').classList.add('hidden');
+            }
             
             loadKeys();
         } else {
@@ -149,30 +168,73 @@
     async function generateInvite() {
         const res = await fetch(`${API_URL}/create_invite`, { method: 'POST', headers: getAuthHeaders() });
         const data = await res.json();
-        if(data.success) alert("Reseller Invite Code (Ise Copy Kar Lein):\n\n" + data.invite);
+        if(data.success) alert("Reseller Invite Code:\n\n" + data.invite);
         else alert(data.message);
     }
 
-    async function generateKey() {
-        const duration = document.getElementById('duration').value;
-        const res = await fetch(`${API_URL}/generate`, {
+    // 👥 Resellers Load Karna
+    async function loadResellers() {
+        const res = await fetch(`${API_URL}/users`, { headers: getAuthHeaders() });
+        if(!res.ok) return;
+        const users = await res.json();
+        
+        const table = document.getElementById('resellersTable');
+        table.innerHTML = "";
+        
+        users.forEach(u => {
+            const btnClass = u.status === 'blocked' ? 'unblock-btn' : 'block-btn';
+            const btnText = u.status === 'blocked' ? 'Unblock' : 'Block 🚫';
+            table.innerHTML += `
+                <tr>
+                    <td data-label="User">${u.username}</td>
+                    <td data-label="Status">${u.status}</td>
+                    <td data-label="Action">
+                        <button class="${btnClass}" onclick="toggleUserStatus('${u.username}')">${btnText}</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    // 🚫 Reseller Ko Block/Unblock Karna
+    async function toggleUserStatus(username) {
+        if(!confirm(`Kya aap sach me ${username} ka status badalna chahte hain?`)) return;
+        
+        const res = await fetch(`${API_URL}/toggle_user`, {
             method: 'POST', headers: getAuthHeaders(),
-            body: JSON.stringify({ durationDays: duration })
+            body: JSON.stringify({ targetUser: username })
         });
         const data = await res.json();
-        if(data.success) { alert("Key Generated:\n" + data.key); loadKeys(); }
-        else { alert("Error: Auth Failed"); logout(); }
+        alert(data.message);
+        loadResellers(); // Table update karo
+    }
+
+    // 🔑 Nayi Custom Key Generate Karna
+    async function generateKey() {
+        const duration = document.getElementById('duration').value;
+        const custom = document.getElementById('customKey').value; // NAYA: Custom Key input
+
+        const res = await fetch(`${API_URL}/generate`, {
+            method: 'POST', headers: getAuthHeaders(),
+            body: JSON.stringify({ durationDays: duration, customKey: custom })
+        });
+        
+        const data = await res.json();
+        if(data.success) { 
+            alert("Key Generated:\n" + data.key); 
+            document.getElementById('customKey').value = ""; // Input clear karo
+            loadKeys(); 
+        }
+        else { alert(data.message); if(data.message.includes("Login required") || data.message.includes("BLOCK")) logout(); }
     }
 
     async function loadKeys() {
         const res = await fetch(`${API_URL}/keys`, { headers: getAuthHeaders() });
-        if(res.status === 401) return logout(); // Agar password change ho gaya toh bahar phek do
+        if(res.status === 401 || res.status === 403) { alert("Session Expired ya aap block hain."); return logout(); }
         
         const keys = await res.json();
         const table = document.getElementById('keysTable');
         table.innerHTML = "";
         
-        // Ulta loop chalayenge taaki nayi keys sabse upar dikhein
         for (let i = keys.length - 1; i >= 0; i--) {
             let k = keys[i];
             table.innerHTML += `
@@ -185,7 +247,6 @@
         }
     }
 
-    // Page khulte hi check karo ki login hai ya nahi
     checkLoginState();
 </script>
 </body>
