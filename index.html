@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baba Premium Panel</title>
+    <title>Premium Panel</title>
     <style>
         body { font-family: 'Arial', sans-serif; background: #121212; color: #fff; padding: 15px; margin: 0; }
         .box { background: #1e1e1e; padding: 20px; border-radius: 8px; max-width: 800px; margin: auto; }
@@ -40,15 +40,15 @@
         <input type="text" id="logUser" placeholder="Username">
         <input type="password" id="logPass" placeholder="Password">
         <button onclick="login()">Login</button>
-        <span class="toggle-link" onclick="toggleAuth()">Naye User Ho? Naya Account Banao</span>
+        <span class="toggle-link" onclick="toggleAuth()">New user| Create account</span>
     </div>
 
     <div id="registerForm" class="hidden">
-        <input type="text" id="regUser" placeholder="Naya Username">
-        <input type="password" id="regPass" placeholder="Naya Password">
-        <input type="text" id="regInvite" placeholder="Admin Ka Invite Code">
+        <input type="text" id="regUser" placeholder="New Username">
+        <input type="password" id="regPass" placeholder="New Password">
+        <input type="text" id="regInvite" placeholder="Invite Code">
         <button onclick="register()">Register</button>
-        <span class="toggle-link" onclick="toggleAuth()">Pehle se Account hai? Login karo</span>
+        <span class="toggle-link" onclick="toggleAuth()">Already have an account| Login</span>
     </div>
 </div>
 
@@ -57,7 +57,7 @@
     
     <div id="adminPanel" class="admin-zone hidden">
         <h3 style="margin: 0 0 10px 0; color: #ff5722;">👑 Admin Zone (Reseller Management)</h3>
-        <button class="admin-btn" onclick="generateInvite()">🎟️ Naya Invite Code Banao</button>
+        <button class="admin-btn" onclick="generateInvite()">🎟️ New Invite Code</button>
         
         <table style="margin-top: 15px;">
             <thead>
@@ -153,7 +153,7 @@
             
             if(role === 'admin') {
                 document.getElementById('adminPanel').classList.remove('hidden');
-                loadResellers(); // Admin hai toh resellers ki list laao
+                loadResellers();
             } else {
                 document.getElementById('adminPanel').classList.add('hidden');
             }
@@ -172,7 +172,7 @@
         else alert(data.message);
     }
 
-    // 👥 Resellers Load Karna
+    
     async function loadResellers() {
         const res = await fetch(`${API_URL}/users`, { headers: getAuthHeaders() });
         if(!res.ok) return;
@@ -195,7 +195,7 @@
         });
     }
 
-    // 🚫 Reseller Ko Block/Unblock Karna
+    
     async function toggleUserStatus(username) {
         if(!confirm(`Kya aap sach me ${username} ka status badalna chahte hain?`)) return;
         
@@ -205,13 +205,13 @@
         });
         const data = await res.json();
         alert(data.message);
-        loadResellers(); // Table update karo
+        loadResellers();
     }
 
-    // 🔑 Nayi Custom Key Generate Karna
+    
     async function generateKey() {
         const duration = document.getElementById('duration').value;
-        const custom = document.getElementById('customKey').value; // NAYA: Custom Key input
+        const custom = document.getElementById('customKey').value;
 
         const res = await fetch(`${API_URL}/generate`, {
             method: 'POST', headers: getAuthHeaders(),
@@ -221,7 +221,7 @@
         const data = await res.json();
         if(data.success) { 
             alert("Key Generated:\n" + data.key); 
-            document.getElementById('customKey').value = ""; // Input clear karo
+            document.getElementById('customKey').value = "";
             loadKeys(); 
         }
         else { alert(data.message); if(data.message.includes("Login required") || data.message.includes("BLOCK")) logout(); }
