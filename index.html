@@ -3,252 +3,498 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Panel</title>
+    <title>BABA LOADER PANEL</title>
+    <!-- Google Fonts for modern text -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;1,700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Arial', sans-serif; background: #121212; color: #fff; padding: 15px; margin: 0; }
-        .box { background: #1e1e1e; padding: 20px; border-radius: 8px; max-width: 800px; margin: auto; }
-        input, select, button { padding: 10px; margin: 8px 0; width: 100%; font-size: 16px; border-radius: 5px; box-sizing: border-box; }
-        input, select { background: #2a2a2a; color: white; border: 1px solid #444; }
-        button { background: #00adb5; color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:hover { background: #007c82; }
-        .admin-btn { background: #ff5722; }
-        .admin-btn:hover { background: #e64a19; }
-        .logout-btn { background: #dc3545; }
-        .block-btn { background: #dc3545; padding: 5px; font-size: 12px; width: auto; margin:0;}
-        .unblock-btn { background: #28a745; padding: 5px; font-size: 12px; width: auto; margin:0;}
-        table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 14px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
-        th { background: #333; color: #00adb5; }
-        .hidden { display: none; }
-        .toggle-link { color: #00adb5; cursor: pointer; text-align: center; display: block; margin-top: 10px; }
-        .admin-zone { border: 1px dashed #ff5722; padding: 15px; margin-bottom: 15px; border-radius: 8px; background: rgba(255, 87, 34, 0.05); }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #0c1a42, #02081a 80%);
+            color: #fff;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Top Navbar */
+        .navbar {
+            width: 100%;
+            background: #02081a;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .navbar-brand {
+            font-size: 18px;
+            font-weight: 700;
+            font-style: italic;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar-brand span {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        .menu-icon {
+            font-size: 24px;
+            color: #00d2ff;
+            cursor: pointer;
+        }
+
+        /* Glassmorphism Box */
+        .box {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(138, 43, 226, 0.3); /* Purple glow top */
+            border-bottom: 1px solid rgba(0, 210, 255, 0.3); /* Cyan glow bottom */
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            margin: 40px auto;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        /* Dashboard Box specifically */
+        .dashboard-box {
+            max-width: 900px;
+            width: 95%;
+        }
+
+        h2.title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #eaeaea;
+        }
+
+        /* Input Fields */
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+        input, select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+        input:focus, select:focus {
+            border-color: #00d2ff;
+            background: rgba(0, 0, 0, 0.4);
+        }
+        input:disabled {
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        /* Toggles & Links */
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            margin-bottom: 20px;
+            color: #aaa;
+        }
+        .link-text {
+            color: #00d2ff;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .link-text:hover {
+            text-shadow: 0 0 8px #00d2ff;
+        }
+
+        /* Gradient Button */
+        button.primary-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+            color: #000;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+        }
+        button.primary-btn:hover {
+            box-shadow: 0 4px 25px rgba(0, 210, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* Dashboard specific buttons */
+        .admin-btn { background: linear-gradient(90deg, #ff416c, #ff4b2b); color: white; padding:10px; border-radius:5px; border:none; cursor:pointer; width:100%; font-weight:bold; margin-bottom:10px;}
+        .logout-btn { background: rgba(220, 53, 69, 0.2); border: 1px solid #dc3545; color: #ff6b6b; padding:10px; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; margin-top:20px;}
         
+        .footer-links {
+            text-align: center;
+            font-size: 11px;
+            color: #aaa;
+            line-height: 2;
+        }
+
+        /* Tables for Dashboard */
+        table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { background: rgba(0,0,0,0.3); color: #00d2ff; }
+        
+        .hidden { display: none; }
+        .admin-zone { border: 1px solid rgba(255, 75, 43, 0.3); padding: 15px; margin-bottom: 15px; border-radius: 8px; background: rgba(255, 75, 43, 0.05); }
+        
+        /* Mobile Table */
         @media (max-width: 600px) {
             table, thead, tbody, th, td, tr { display: block; }
             th { display: none; }
             td { position: relative; padding-left: 50%; text-align: right; }
-            td::before { content: attr(data-label); position: absolute; left: 10px; font-weight: bold; text-align: left; color: #00adb5; }
+            td::before { content: attr(data-label); position: absolute; left: 10px; font-weight: bold; text-align: left; color: #00d2ff; }
+        }
+
+        /* Bottom Footer */
+        .bottom-footer {
+            margin-top: auto;
+            padding: 15px;
+            font-size: 11px;
+            color: #aaa;
+            text-align: center;
+            width: 100%;
+            background: #02081a;
         }
     </style>
 </head>
 <body>
 
-<div id="authScreen" class="box">
-    <h2 style="text-align: center; color: #00adb5;">🔐 Baba Panel Auth</h2>
-    
-    <div id="loginForm">
-        <input type="text" id="logUser" placeholder="Username">
-        <input type="password" id="logPass" placeholder="Password">
-        <button onclick="login()">Login</button>
-        <span class="toggle-link" onclick="toggleAuth()">New user| Create account</span>
+    <!-- TOP NAVBAR -->
+    <div class="navbar">
+        <div class="navbar-brand">
+            🛡️ <span>BABA LOADER PANEL</span>
+        </div>
+        <div class="menu-icon">☰</div>
     </div>
 
-    <div id="registerForm" class="hidden">
-        <input type="text" id="regUser" placeholder="New Username">
-        <input type="password" id="regPass" placeholder="New Password">
-        <input type="text" id="regInvite" placeholder="Invite Code">
-        <button onclick="register()">Register</button>
-        <span class="toggle-link" onclick="toggleAuth()">Already have an account| Login</span>
-    </div>
-</div>
-
-<div id="dashboardScreen" class="box hidden">
-    <h2 style="text-align: center; color: #00adb5;">🚀 <span id="welcomeName"></span>'s Panel</h2>
-    
-    <div id="adminPanel" class="admin-zone hidden">
-        <h3 style="margin: 0 0 10px 0; color: #ff5722;">👑 Admin Zone (Reseller Management)</h3>
-        <button class="admin-btn" onclick="generateInvite()">🎟️ New Invite Code</button>
+    <!-- LOGIN & REGISTER SCREEN -->
+    <div id="authScreen" class="box">
         
-        <table style="margin-top: 15px;">
-            <thead>
-                <tr>
-                    <th>Reseller Name</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="resellersTable"></tbody>
-        </table>
+        <!-- Login Form -->
+        <div id="loginForm">
+            <h2 class="title">SYSTEM LOGIN</h2>
+            
+            <div class="input-group">
+                <input type="text" value="Welcome Stranger" disabled>
+            </div>
+
+            <div class="input-group">
+                <label>USERNAME</label>
+                <input type="text" id="logUser" placeholder="Enter your username">
+            </div>
+
+            <div class="input-group">
+                <label>PASSWORD</label>
+                <input type="password" id="logPass" placeholder="Enter your password">
+            </div>
+
+            <div class="options-row">
+                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                    <input type="checkbox" style="width:auto; margin:0;" checked> STAY LOGGED IN
+                </label>
+                <a href="#" class="link-text">FORGOT PASSWORD?</a>
+            </div>
+
+            <button class="primary-btn" onclick="login()">ACCESS SYSTEM</button>
+
+            <div class="footer-links">
+                DON'T HAVE AN ACCOUNT? <span class="link-text" onclick="toggleAuth()">REGISTER HERE</span><br>
+                FORGOT DEVICE LOCK? <a href="#" class="link-text">RESET DEVICE</a>
+            </div>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="hidden">
+            <h2 class="title">SYSTEM REGISTER</h2>
+            
+            <div class="input-group">
+                <label>NEW USERNAME</label>
+                <input type="text" id="regUser" placeholder="Choose a username">
+            </div>
+
+            <div class="input-group">
+                <label>NEW PASSWORD</label>
+                <input type="password" id="regPass" placeholder="Create a password">
+            </div>
+
+            <div class="input-group">
+                <label>INVITE CODE</label>
+                <input type="text" id="regInvite" placeholder="Enter Admin's invite code">
+            </div>
+
+            <button class="primary-btn" onclick="register()">REGISTER ACCOUNT</button>
+
+            <div class="footer-links">
+                ALREADY HAVE AN ACCOUNT? <span class="link-text" onclick="toggleAuth()">LOGIN HERE</span>
+            </div>
+        </div>
     </div>
 
-    <hr style="border-color: #333;">
+    <!-- MAIN DASHBOARD SCREEN -->
+    <div id="dashboardScreen" class="box dashboard-box hidden">
+        <h2 class="title">🚀 WELCOME <span id="welcomeName" style="color:#00d2ff;"></span></h2>
+        
+        <!-- ADMIN ZONE (Sirf Admin ko dikhega) -->
+        <div id="adminPanel" class="admin-zone hidden">
+            <h3 style="margin: 0 0 10px 0; color: #ff4b2b; font-size:14px;">👑 ADMIN CONTROLS</h3>
+            <button class="admin-btn" onclick="generateInvite()">🎟️ GENERATE RESELLER INVITE CODE</button>
+            
+            <table style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>Reseller Name</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="resellersTable"></tbody>
+            </table>
+        </div>
 
-    <h3>🔑 Create New Key</h3>
-    <input type="text" id="customKey" placeholder="Custom Key (Optional) - Leave blank for Random">
-    <select id="duration">
-        <option value="1">1 Day</option>
-        <option value="7">7 Days</option>
-        <option value="30">30 Days</option>
-        <option value="9999">Lifetime</option>
-    </select>
-    <button onclick="generateKey()">➕ Generate Key</button>
-    
-    <hr style="border-color: #333;">
+        <!-- KEY GENERATION ZONE -->
+        <div style="margin-top:20px;">
+            <h3 style="font-size:14px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">🔑 CREATE NEW LICENSE</h3>
+            
+            <div class="input-group">
+                <label>CUSTOM KEY (OPTIONAL)</label>
+                <input type="text" id="customKey" placeholder="Leave blank for random key">
+            </div>
+            
+            <div class="input-group">
+                <label>DURATION</label>
+                <select id="duration">
+                    <option value="1">1 Day</option>
+                    <option value="7">7 Days</option>
+                    <option value="30">30 Days</option>
+                    <option value="365">1 Year</option>
+                </select>
+            </div>
+            
+            <button class="primary-btn" style="margin-bottom:0;" onclick="generateKey()">➕ GENERATE LICENSE</button>
+        </div>
+        
+        <!-- KEYS LIST -->
+        <div style="margin-top:30px;">
+            <h3 style="font-size:14px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">📋 YOUR LICENSES</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>License Key</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                    </tr>
+                </thead>
+                <tbody id="keysTable"></tbody>
+            </table>
+        </div>
+        
+        <button class="logout-btn" onclick="logout()">🚪 LOGOUT SECURELY</button>
+    </div>
 
-    <h3>📋 Keys List</h3>
-    <table>
-        <tbody id="keysTable"></tbody>
-    </table>
-    
-    <button class="logout-btn" style="margin-top:20px;" onclick="logout()">🚪 Logout</button>
-</div>
+    <!-- BOTTOM FOOTER -->
+    <div class="bottom-footer">
+        © <span id="currentDate"></span> - <b>BABA LOADER PANEL</b>
+    </div>
 
-<script>
-    const API_URL = "/api";
+    <script>
+const d = new Date();
+const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const liveDate = `${days[d.getDay()]} ${d.getDate()}-${months[d.getMonth()]} ${d.getFullYear()}`;
+document.getElementById('currentDate').innerText = liveDate;
+        
 
-    function getAuthHeaders() {
-        return {
-            'Content-Type': 'application/json',
-            'x-username': localStorage.getItem('panel_user'),
-            'x-password': localStorage.getItem('panel_pass')
-        };
-    }
+        const API_URL = "/api";
 
-    function toggleAuth() {
-        document.getElementById('loginForm').classList.toggle('hidden');
-        document.getElementById('registerForm').classList.toggle('hidden');
-    }
+        function getAuthHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'x-username': localStorage.getItem('panel_user'),
+                'x-password': localStorage.getItem('panel_pass')
+            };
+        }
 
-    async function login() {
-        const u = document.getElementById('logUser').value;
-        const p = document.getElementById('logPass').value;
-        const res = await fetch(`${API_URL}/login`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: u, password: p})
-        });
-        const data = await res.json();
-        if(data.success) {
-            localStorage.setItem('panel_user', u);
-            localStorage.setItem('panel_pass', p);
-            localStorage.setItem('panel_role', data.role);
+        function toggleAuth() {
+            document.getElementById('loginForm').classList.toggle('hidden');
+            document.getElementById('registerForm').classList.toggle('hidden');
+        }
+
+        async function login() {
+            const u = document.getElementById('logUser').value;
+            const p = document.getElementById('logPass').value;
+            const res = await fetch(`${API_URL}/login`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: u, password: p})
+            });
+            const data = await res.json();
+            if(data.success) {
+                localStorage.setItem('panel_user', u);
+                localStorage.setItem('panel_pass', p);
+                localStorage.setItem('panel_role', data.role);
+                checkLoginState();
+            } else { alert(data.message); }
+        }
+
+        async function register() {
+            const u = document.getElementById('regUser').value;
+            const p = document.getElementById('regPass').value;
+            const i = document.getElementById('regInvite').value;
+            const res = await fetch(`${API_URL}/register`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: u, password: p, inviteCode: i})
+            });
+            const data = await res.json();
+            alert(data.message);
+            if(data.success) toggleAuth(); 
+        }
+
+        function logout() {
+            localStorage.clear();
             checkLoginState();
-        } else { alert(data.message); }
-    }
+        }
 
-    async function register() {
-        const u = document.getElementById('regUser').value;
-        const p = document.getElementById('regPass').value;
-        const i = document.getElementById('regInvite').value;
-        const res = await fetch(`${API_URL}/register`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: u, password: p, inviteCode: i})
-        });
-        const data = await res.json();
-        alert(data.message);
-        if(data.success) toggleAuth(); 
-    }
-
-    function logout() {
-        localStorage.clear();
-        checkLoginState();
-    }
-
-    function checkLoginState() {
-        const user = localStorage.getItem('panel_user');
-        const role = localStorage.getItem('panel_role');
-        
-        if (user) {
-            document.getElementById('authScreen').classList.add('hidden');
-            document.getElementById('dashboardScreen').classList.remove('hidden');
-            document.getElementById('welcomeName').innerText = user.toUpperCase();
+        function checkLoginState() {
+            const user = localStorage.getItem('panel_user');
+            const role = localStorage.getItem('panel_role');
             
-            if(role === 'admin') {
-                document.getElementById('adminPanel').classList.remove('hidden');
-                loadResellers();
+            if (user) {
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('dashboardScreen').classList.remove('hidden');
+                document.getElementById('welcomeName').innerText = user.toUpperCase();
+                
+                if(role === 'admin') {
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                    loadResellers(); 
+                } else {
+                    document.getElementById('adminPanel').classList.add('hidden');
+                }
+                
+                loadKeys();
             } else {
-                document.getElementById('adminPanel').classList.add('hidden');
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('dashboardScreen').classList.add('hidden');
             }
+        }
+
+        async function generateInvite() {
+            const res = await fetch(`${API_URL}/create_invite`, { method: 'POST', headers: getAuthHeaders() });
+            const data = await res.json();
+            if(data.success) alert("Reseller Invite Code:\n\n" + data.invite);
+            else alert(data.message);
+        }
+
+        async function loadResellers() {
+            const res = await fetch(`${API_URL}/users`, { headers: getAuthHeaders() });
+            if(!res.ok) return;
+            const users = await res.json();
             
-            loadKeys();
-        } else {
-            document.getElementById('authScreen').classList.remove('hidden');
-            document.getElementById('dashboardScreen').classList.add('hidden');
+            const table = document.getElementById('resellersTable');
+            table.innerHTML = "";
+            
+            users.forEach(u => {
+                const btnStyle = u.status === 'blocked' ? 'background:#28a745; color:white; border:none; padding:5px; border-radius:3px;' : 'background:#dc3545; color:white; border:none; padding:5px; border-radius:3px;';
+                const btnText = u.status === 'blocked' ? 'UNBLOCK' : 'BLOCK';
+                table.innerHTML += `
+                    <tr>
+                        <td data-label="User">${u.username}</td>
+                        <td data-label="Status" style="color:${u.status==='blocked'?'#dc3545':'#28a745'}">${u.status.toUpperCase()}</td>
+                        <td data-label="Action">
+                            <button style="${btnStyle}" onclick="toggleUserStatus('${u.username}')">${btnText}</button>
+                        </td>
+                    </tr>`;
+            });
         }
-    }
 
-    async function generateInvite() {
-        const res = await fetch(`${API_URL}/create_invite`, { method: 'POST', headers: getAuthHeaders() });
-        const data = await res.json();
-        if(data.success) alert("Reseller Invite Code:\n\n" + data.invite);
-        else alert(data.message);
-    }
-
-    
-    async function loadResellers() {
-        const res = await fetch(`${API_URL}/users`, { headers: getAuthHeaders() });
-        if(!res.ok) return;
-        const users = await res.json();
-        
-        const table = document.getElementById('resellersTable');
-        table.innerHTML = "";
-        
-        users.forEach(u => {
-            const btnClass = u.status === 'blocked' ? 'unblock-btn' : 'block-btn';
-            const btnText = u.status === 'blocked' ? 'Unblock' : 'Block 🚫';
-            table.innerHTML += `
-                <tr>
-                    <td data-label="User">${u.username}</td>
-                    <td data-label="Status">${u.status}</td>
-                    <td data-label="Action">
-                        <button class="${btnClass}" onclick="toggleUserStatus('${u.username}')">${btnText}</button>
-                    </td>
-                </tr>`;
-        });
-    }
-
-    
-    async function toggleUserStatus(username) {
-        if(!confirm(`Kya aap sach me ${username} ka status badalna chahte hain?`)) return;
-        
-        const res = await fetch(`${API_URL}/toggle_user`, {
-            method: 'POST', headers: getAuthHeaders(),
-            body: JSON.stringify({ targetUser: username })
-        });
-        const data = await res.json();
-        alert(data.message);
-        loadResellers();
-    }
-
-    
-    async function generateKey() {
-        const duration = document.getElementById('duration').value;
-        const custom = document.getElementById('customKey').value;
-
-        const res = await fetch(`${API_URL}/generate`, {
-            method: 'POST', headers: getAuthHeaders(),
-            body: JSON.stringify({ durationDays: duration, customKey: custom })
-        });
-        
-        const data = await res.json();
-        if(data.success) { 
-            alert("Key Generated:\n" + data.key); 
-            document.getElementById('customKey').value = "";
-            loadKeys(); 
+        async function toggleUserStatus(username) {
+            if(!confirm(`Change status for ${username}?`)) return;
+            
+            const res = await fetch(`${API_URL}/toggle_user`, {
+                method: 'POST', headers: getAuthHeaders(),
+                body: JSON.stringify({ targetUser: username })
+            });
+            const data = await res.json();
+            alert(data.message);
+            loadResellers(); 
         }
-        else { alert(data.message); if(data.message.includes("Login required") || data.message.includes("BLOCK")) logout(); }
-    }
 
-    async function loadKeys() {
-        const res = await fetch(`${API_URL}/keys`, { headers: getAuthHeaders() });
-        if(res.status === 401 || res.status === 403) { alert("Session Expired ya aap block hain."); return logout(); }
-        
-        const keys = await res.json();
-        const table = document.getElementById('keysTable');
-        table.innerHTML = "";
-        
-        for (let i = keys.length - 1; i >= 0; i--) {
-            let k = keys[i];
-            table.innerHTML += `
-                <tr>
-                    <td data-label="Key"><strong>${k.key}</strong></td>
-                    <td data-label="Days">${k.durationDays}D</td>
-                    <td data-label="Status">[${k.status}]</td>
-                    <td data-label="Owner" style="color: #aaa; font-size:12px;">Made by: ${k.owner}</td>
-                </tr>`;
+        async function generateKey() {
+            const duration = document.getElementById('duration').value;
+            const custom = document.getElementById('customKey').value; 
+
+            const res = await fetch(`${API_URL}/generate`, {
+                method: 'POST', headers: getAuthHeaders(),
+                body: JSON.stringify({ durationDays: duration, customKey: custom })
+            });
+            
+            const data = await res.json();
+            if(data.success) { 
+                alert("Key Generated:\n" + data.key); 
+                document.getElementById('customKey').value = ""; 
+                loadKeys(); 
+            }
+            else { alert(data.message); if(data.message.includes("Login required") || data.message.includes("BLOCK")) logout(); }
         }
-    }
 
-    checkLoginState();
-</script>
+        async function loadKeys() {
+            const res = await fetch(`${API_URL}/keys`, { headers: getAuthHeaders() });
+            if(res.status === 401 || res.status === 403) { alert("Session Expired ya aap block hain."); return logout(); }
+            
+            const keys = await res.json();
+            const table = document.getElementById('keysTable');
+            table.innerHTML = "";
+            
+            for (let i = keys.length - 1; i >= 0; i--) {
+                let k = keys[i];
+                let statusColor = k.status === 'Active' ? '#28a745' : (k.status === 'Unused' ? '#ffc107' : '#dc3545');
+                table.innerHTML += `
+                    <tr>
+                        <td data-label="Key"><code style="color:#00d2ff; font-size:14px;">${k.key}</code></td>
+                        <td data-label="Duration">${k.durationDays} Days</td>
+                        <td data-label="Status" style="color:${statusColor}; font-weight:bold;">${k.status}</td>
+                        <td data-label="Owner" style="color:#aaa; font-size:11px;">${k.owner}</td>
+                    </tr>`;
+            }
+        }
+
+        checkLoginState();
+    </script>
 </body>
 </html>
