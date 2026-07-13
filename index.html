@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BABA LOADER PANEL</title>
+    <title>KEY PANEL</title>
     <!-- Google Fonts for modern text -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;1,700&display=swap" rel="stylesheet">
     <style>
@@ -199,7 +199,7 @@
     <!-- TOP NAVBAR -->
     <div class="navbar">
         <div class="navbar-brand">
-            🛡️ <span>BABA LOADER PANEL</span>
+            🛡️ <span>KEY PANEL</span>
         </div>
         <div class="menu-icon">☰</div>
     </div>
@@ -274,7 +274,7 @@
         <!-- ADMIN ZONE (Sirf Admin ko dikhega) -->
         <div id="adminPanel" class="admin-zone hidden">
             <h3 style="margin: 0 0 10px 0; color: #ff4b2b; font-size:14px;">👑 ADMIN CONTROLS</h3>
-            <button class="admin-btn" onclick="generateInvite()">🎟️ GENERATE RESELLER INVITE CODE</button>
+            <button class="admin-btn" onclick="generateInvite()">🎟️ GENERATE INVITE CODE</button>
             
             <table style="margin-top: 15px;">
                 <thead>
@@ -303,7 +303,7 @@
                     <option value="1">1 Day</option>
                     <option value="7">7 Days</option>
                     <option value="30">30 Days</option>
-                    <option value="365">1 Year</option>
+                    <option value="365">Unlimited</option>
                 </select>
             </div>
             
@@ -326,12 +326,12 @@
             </table>
         </div>
         
-        <button class="logout-btn" onclick="logout()">🚪 LOGOUT SECURELY</button>
+        <button class="logout-btn" onclick="logout()">🚪 LOGOUT</button>
     </div>
 
     <!-- BOTTOM FOOTER -->
     <div class="bottom-footer">
-        © <span id="currentDate"></span> - <b>BABA LOADER PANEL</b>
+        © <span id="currentDate"></span> - <b>KEY PANEL</b>
     </div>
 
     <script>
@@ -475,7 +475,7 @@ document.getElementById('currentDate').innerText = liveDate;
 
         async function loadKeys() {
             const res = await fetch(`${API_URL}/keys`, { headers: getAuthHeaders() });
-            if(res.status === 401 || res.status === 403) { alert("Session Expired ya aap block hain."); return logout(); }
+            if(res.status === 401 || res.status === 403) { alert("Session Expired or User blocked."); return logout(); }
             
             const keys = await res.json();
             const table = document.getElementById('keysTable');
