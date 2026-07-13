@@ -468,7 +468,64 @@ document.getElementById('currentDate').innerText = liveDate;
             if(data.success) { 
                 alert("Key Generated:\n" + data.key); 
                 document.getElementById('customKey').value = ""; 
-                loadKeys(); 
+                        // NAYA: Keys load karna + ON/OFF button
+        async function loadKeys() {
+            const res = await fetch(`${API_URL}/keys`, { headers: getAuthHeaders() });
+            if(res.status === 401 || res.status === 403) { alert("Session Expired ya aap block hain."); return logout(); }
+            
+            const keys = await res.json();
+            const table = document.getElementById('keysTable');
+            
+            // Table ka Header (Jisme Action add kiya hai)
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>License Key</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            
+            const tbody = table.querySelector('tbody');
+            
+            for (let i = keys.length - 1; i >= 0; i--) {
+                let k = keys[i];
+                let statusColor = k.status === 'Active' ? '#28a745' : (k.status === 'Unused' ? '#ffc107' : '#dc3545');
+                let ownerName = k.owner ? k.owner : 'Admin (Old)';
+                
+                // ON / OFF Button ka Design
+                let btnHtml = k.status === 'Blocked' 
+                    ? `<button style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;" onclick="toggleKey('${k.key}')">TURN ON</button>`
+                    : `<button style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;" onclick="toggleKey('${k.key}')">TURN OFF</button>`;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td data-label="Key"><code style="color:#00d2ff; font-size:14px;">${k.key}</code></td>
+                        <td data-label="Duration">${k.durationDays} Days</td>
+                        <td data-label="Status" style="color:${statusColor}; font-weight:bold;">${k.status}</td>
+                        <td data-label="Owner" style="color:#aaa; font-size:11px;">${ownerName}</td>
+                        <td data-label="Action">${btnHtml}</td>
+                    </tr>`;
+            }
+        }
+
+        // Key ON/OFF
+        async function toggleKey(key) {
+            if(!confirm(`Are you sure you want to (${key}) change this key status?`)) return;
+            
+            const res = await fetch(`${API_URL}/toggle_key`, {
+                method: 'POST', headers: getAuthHeaders(),
+                body: JSON.stringify({ key: key })
+            });
+            const data = await res.json();
+            alert(data.message);
+            loadKeys();
+        }
+                
             }
             else { alert(data.message); if(data.message.includes("Login required") || data.message.includes("BLOCK")) logout(); }
         }
