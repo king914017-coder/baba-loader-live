@@ -160,6 +160,29 @@ app.get('/api/keys', authenticate, (req, res) => {
     if (req.user.role === "admin") res.json(db);
     else res.json(db.filter(k => k.owner === req.user.username));
 });
+// 🚫 Key ON/OFF (Block/Unblock)
+app.post('/api/toggle_key', authenticate, (req, res) => {
+    const { key } = req.body;
+    let db = readJSON(DB_FILE, []);
+    let keyData = db.find(k => k.key === key);
+
+    if (!keyData) return res.json({ success: false, message: "Key nahi mili!" });
+
+    // Admin can block any key
+    if (req.user.role !== "admin" && keyData.owner !== req.user.username) {
+        return res.status(403).json({ success: false, message: "Aap sirf apni banayi hui key off kar sakte hain!" });
+    }
+
+    // If blocked you can active/unused
+    if (keyData.status === "Blocked") {
+        keyData.status = keyData.hwid ? "Active" : "Unused";
+    } else {
+        keyData.status = "Blocked";
+    }
+
+    writeJSON(DB_FILE, db);
+    res.json({ success: true, message: `Key ab ${keyData.status} ho gayi hai!` });
+});
 
 
 app.post('/api/validate', apiLimiter, (req, res) => {
@@ -170,6 +193,10 @@ app.post('/api/validate', apiLimiter, (req, res) => {
     let keyIndex = db.findIndex(k => k.key === key);
 
     if (keyIndex === -1) return res.json({ status: "failed", message: "Invalid Key!" });
+
+    // If key blocked close the loader
+    if (keyData.status === "Blocked") return res.json({ status: "failed", message: "User Blocked" });
+    
 
     let keyData = db[keyIndex];
 
