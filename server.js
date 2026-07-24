@@ -20,7 +20,7 @@ const apiLimiter = rateLimit({
     message: { status: "failed", message: "🚫 Limit Reached! Try again later." }
 });
 // 🚀 MONGODB CONNECTION (Cloud Database)
-const MONGO_URI = "mongodb+srv://BABA:Admin_baba@cluster0.avswfs1.mongodb.net/?retryWrites=true&w=majority";
+const MONGO_URI = "mongodb+srv://BABA:Admin_baba@cluster0.avswfs1.mongodb.net/?appName=Cluster0";
 mongoose.connect(MONGO_URI)
     .then(() => console.log("✅ MongoDB Super Database Connected!"))
     .catch(err => console.log("❌ DB Error:", err));
