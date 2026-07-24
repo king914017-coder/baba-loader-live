@@ -13,11 +13,8 @@ const apiLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, max: 10,
     message: { status: "failed", message: "🚫 Limit Reached! Try again later." }
 });
-
 // 🚀 MONGODB CONNECTION (Cloud Database)
-// Niche di gayi line me apna MongoDB ka link daalna hoga baad me
-const MONGO_URI = "mongodb+srv://<username>:<password>@cluster0.mongodb.net/?retryWrites=true&w=majority";
-
+const MONGO_URI = "mongodb+srv://BABA:Admin_baba@cluster0.avswfs1.mongodb.net/?retryWrites=true&w=majority";
 mongoose.connect(MONGO_URI)
     .then(() => console.log("✅ MongoDB Super Database Connected!"))
     .catch(err => console.log("❌ DB Error:", err));
