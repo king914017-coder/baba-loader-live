@@ -5,8 +5,15 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+const path = require('path');
+
 app.use(express.json());
 app.use(cors());
+// 🌐 Serve Index.html on main page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 
 // 🛡️ ANTI-SPAM (1 Min me max 10 requests)
 const apiLimiter = rateLimit({
