@@ -3,10 +3,9 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-
-const app = express();
 const path = require('path');
 
+const app = express();
 app.use(express.json());
 app.use(cors());
 // 🌐 Serve Index.html on main page
