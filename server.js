@@ -1,214 +1,126 @@
 const express = require('express');
-const fs = require('fs');
+const mongoose = require('mongoose');
 const crypto = require('crypto');
 const cors = require('cors');
-const path = require('path');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-const rateLimit = require('express-rate-limit');
 
+// 🛡️ ANTI-SPAM (1 Min me max 10 requests)
 const apiLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 5,
-    message: { status: "failed", message: "🚫 Too many attempts, try after 1 minute." },
-    standardHeaders: true,
-    legacyHeaders: false,
+    windowMs: 1 * 60 * 1000, max: 10,
+    message: { status: "failed", message: "🚫 Limit Reached! Try again later." }
 });
 
+// 🚀 MONGODB CONNECTION (Cloud Database)
+// Niche di gayi line me apna MongoDB ka link daalna hoga baad me
+const MONGO_URI = "mongodb+srv://<username>:<password>@cluster0.mongodb.net/?retryWrites=true&w=majority";
 
-const DB_FILE = './database.json';
-const USERS_FILE = './users.json';
-const INVITES_FILE = './invites.json';
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ MongoDB Super Database Connected!"))
+    .catch(err => console.log("❌ DB Error:", err));
 
-const readJSON = (file, defaultData) => {
-    if (!fs.existsSync(file)) {
-        fs.writeFileSync(file, JSON.stringify(defaultData, null, 2));
-        return defaultData;
-    }
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
-};
-const writeJSON = (file, data) => {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2));
-};
+// 📊 DATABASE STRUCTURES (Schemas)
+const User = mongoose.model('User', new mongoose.Schema({ username: String, password: String, role: String, status: { type: String, default: "active" } }));
+const Key = mongoose.model('Key', new mongoose.Schema({ key: String, durationDays: Number, status: String, hwid: String, expiryDate: Date, owner: String }));
+const Invite = mongoose.model('Invite', new mongoose.Schema({ code: String }));
 
-
-readJSON(DB_FILE, []);
-readJSON(USERS_FILE, [{ username: "Admin", password: "Mishra@123", role: "admin", status: "active" }]);
-readJSON(INVITES_FILE, []);
-
-
-const authenticate = (req, res, next) => {
-    const username = req.headers['x-username'];
-    const password = req.headers['x-password'];
-    
-    const users = readJSON(USERS_FILE, []);
-    const user = users.find(u => u.username === username && u.password === password);
-    
+// 🛡️ SECURITY MIDDLEWARE
+const authenticate = async (req, res, next) => {
+    const user = await User.findOne({ username: req.headers['x-username'], password: req.headers['x-password'] });
     if (!user) return res.status(401).json({ success: false, message: "Login required!" });
-    
-    
-    if (user.status === "blocked") return res.status(403).json({ success: false, message: "🚫 Your account is blocked!" });
-    
-    req.user = user;
-    next();
+    if (user.status === "blocked") return res.status(403).json({ success: false, message: "🚫 Account Blocked!" });
+    req.user = user; next();
 };
 
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    const users = readJSON(USERS_FILE, []);
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        if (user.status === "blocked") return res.json({ success: false, message: "🚫 Your account is BLOCKED!" });
-        res.json({ success: true, role: user.role, message: "Login Successful!" });
-    } else {
-        res.json({ success: false, message: "Wrong Username or Password!" });
-    }
+// ⚙️ API ROUTES
+app.post('/api/login', async (req, res) => {
+    const user = await User.findOne({ username: req.body.username, password: req.body.password });
+    if (!user) return res.json({ success: false, message: "Invalid Username or Password!" });
+    if (user.status === "blocked") return res.json({ success: false, message: "🚫 Account Blocked!" });
+    res.json({ success: true, role: user.role, message: "Login Successful!" });
 });
 
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
     const { username, password, inviteCode } = req.body;
-    if(!username || !password || !inviteCode) return res.json({ success: false, message: "Fill the details!" });
-
-    let invites = readJSON(INVITES_FILE, []);
-    let users = readJSON(USERS_FILE, []);
-
-    if (users.find(u => u.username === username)) return res.json({ success: false, message: "Username already exist!" });
+    if (await User.findOne({ username })) return res.json({ success: false, message: "Username already exist!" });
     
-    const inviteIndex = invites.indexOf(inviteCode);
-    if (inviteIndex === -1) return res.json({ success: false, message: "Code Expired!" });
+    const invite = await Invite.findOne({ code: inviteCode });
+    if (!invite) return res.json({ success: false, message: "Invalid Invite Code!" });
 
-    invites.splice(inviteIndex, 1);
-    users.push({ username: username, password: password, role: "user", status: "active" });
-    
-    writeJSON(INVITES_FILE, invites);
-    writeJSON(USERS_FILE, users);
-    
-    res.json({ success: true, message: "Account created" });
+    await Invite.deleteOne({ code: inviteCode }); // Code use hone par delete
+    await User.create({ username, password, role: "user" });
+    res.json({ success: true, message: "Account Created!" });
 });
 
-app.post('/api/create_invite', authenticate, (req, res) => {
-    if (req.user.role !== "admin") return res.status(403).json({ success: false, message: "Only Admin!" });
-    const newInvite = "BABA-" + crypto.randomBytes(3).toString('hex').toUpperCase();
-    let invites = readJSON(INVITES_FILE, []);
-    invites.push(newInvite);
-    writeJSON(INVITES_FILE, invites);
-    res.json({ success: true, invite: newInvite });
+app.post('/api/create_invite', authenticate, async (req, res) => {
+    if (req.user.role !== "admin") return res.json({ success: false });
+    const code = "BABA-" + crypto.randomBytes(3).toString('hex').toUpperCase();
+    await Invite.create({ code });
+    res.json({ success: true, invite: code });
 });
 
-
-app.get('/api/users', authenticate, (req, res) => {
-    if (req.user.role !== "admin") return res.status(403).json([]);
-    const users = readJSON(USERS_FILE, []);
-    const resellers = users.filter(u => u.role !== "admin");
-    res.json(resellers);
+app.get('/api/users', authenticate, async (req, res) => {
+    if (req.user.role !== "admin") return res.json([]);
+    const users = await User.find({ role: "user" });
+    res.json(users);
 });
 
-
-app.post('/api/toggle_user', authenticate, (req, res) => {
-    if (req.user.role !== "admin") return res.json({ success: false, message: "User Blocked" });
-    
-    const { targetUser } = req.body;
-    let users = readJSON(USERS_FILE, []);
-    let user = users.find(u => u.username === targetUser);
-    
+app.post('/api/toggle_user', authenticate, async (req, res) => {
+    if (req.user.role !== "admin") return res.json({ success: false });
+    const user = await User.findOne({ username: req.body.targetUser });
     if (user) {
-        user.status = (user.status === "blocked") ? "active" : "blocked";
-        writeJSON(USERS_FILE, users);
-        res.json({ success: true, message: `User ${targetUser} ab ${user.status} hai!` });
-    } else {
-        res.json({ success: false, message: "User not found!" });
+        user.status = user.status === "blocked" ? "active" : "blocked";
+        await user.save();
+        res.json({ success: true, message: `User ab ${user.status} hai!` });
     }
 });
 
-
-app.post('/api/generate', authenticate, (req, res) => {
+app.post('/api/generate', authenticate, async (req, res) => {
     const { durationDays, customKey } = req.body;
-    if (!durationDays) return res.status(400).json({ error: "Duration needed!" });
-
-    const db = readJSON(DB_FILE, []);
+    let finalKey = (customKey && customKey.trim()) ? customKey.trim() : crypto.randomBytes(6).toString('hex').toUpperCase().match(/.{1,4}/g).join('-');
     
-    
-    let finalKey = (customKey && customKey.trim() !== "") 
-                   ? customKey.trim() 
-                   : crypto.randomBytes(6).toString('hex').toUpperCase().match(/.{1,4}/g).join('-');
+    if (await Key.findOne({ key: finalKey })) return res.json({ success: false, message: "❌ Key already exists!" });
 
-    
-    if (db.find(k => k.key === finalKey)) {
-        return res.json({ success: false, message: "❌ This key is already exist try new" });
-    }
-
-    db.push({ 
-        key: finalKey, 
-        durationDays: parseInt(durationDays), 
-        status: "Unused", 
-        hwid: null, 
-        expiryDate: null,
-        owner: req.user.username
-    });
-    writeJSON(DB_FILE, db);
-
+    await Key.create({ key: finalKey, durationDays, status: "Unused", owner: req.user.username });
     res.json({ success: true, key: finalKey });
 });
 
-app.get('/api/keys', authenticate, (req, res) => {
-    const db = readJSON(DB_FILE, []);
-    if (req.user.role === "admin") res.json(db);
-    else res.json(db.filter(k => k.owner === req.user.username));
+app.get('/api/keys', authenticate, async (req, res) => {
+    const keys = req.user.role === "admin" ? await Key.find() : await Key.find({ owner: req.user.username });
+    res.json(keys);
 });
-// 🚫 Key ON/OFF (Block/Unblock)
-app.post('/api/toggle_key', authenticate, (req, res) => {
-    const { key } = req.body;
-    let db = readJSON(DB_FILE, []);
-    let keyData = db.find(k => k.key === key);
 
+app.post('/api/toggle_key', authenticate, async (req, res) => {
+    const keyData = await Key.findOne({ key: req.body.key });
     if (!keyData) return res.json({ success: false, message: "Key nahi mili!" });
+    if (req.user.role !== "admin" && keyData.owner !== req.user.username) return res.json({ success: false, message: "Not allowed!" });
 
-    // Admin can block any key
-    if (req.user.role !== "admin" && keyData.owner !== req.user.username) {
-        return res.status(403).json({ success: false, message: "Aap sirf apni banayi hui key off kar sakte hain!" });
-    }
-
-    // If blocked you can active/unused
-    if (keyData.status === "Blocked") {
-        keyData.status = keyData.hwid ? "Active" : "Unused";
-    } else {
-        keyData.status = "Blocked";
-    }
-
-    writeJSON(DB_FILE, db);
-    res.json({ success: true, message: `Key ab ${keyData.status} ho gayi hai!` });
+    keyData.status = keyData.status === "Blocked" ? (keyData.hwid ? "Active" : "Unused") : "Blocked";
+    await keyData.save();
+    res.json({ success: true, message: `Key is now ${keyData.status}` });
 });
 
-
-app.post('/api/validate', apiLimiter, (req, res) => {
+// 🔓 MAIN LOADER VALIDATION (Ultra Fast & Anti-Spam)
+app.post('/api/validate', apiLimiter, async (req, res) => {
     const { key, hwid } = req.body;
-    if (!key || !hwid) return res.status(400).json({ status: "failed", message: "Key and HWID required!" });
+    if (!key || !hwid) return res.json({ status: "failed", message: "Key required!" });
 
-    let db = readJSON(DB_FILE, []);
-    let keyIndex = db.findIndex(k => k.key === key);
-
-    if (keyIndex === -1) return res.json({ status: "failed", message: "Invalid Key!" });
-
-    // If key blocked close the loader
-    if (keyData.status === "Blocked") return res.json({ status: "failed", message: "User Blocked" });
-    
-
-    let keyData = db[keyIndex];
+    const keyData = await Key.findOne({ key });
+    if (!keyData) return res.json({ status: "failed", message: "Invalid Key!" });
+    if (keyData.status === "Blocked") return res.json({ status: "failed", message: "Key is Blocked!" });
 
     if (keyData.status === "Expired" || (keyData.expiryDate && new Date() > new Date(keyData.expiryDate))) {
-        keyData.status = "Expired"; writeJSON(DB_FILE, db);
+        keyData.status = "Expired"; await keyData.save();
         return res.json({ status: "failed", message: "Key Expired!" });
     }
 
     if (keyData.status === "Unused") {
         let expiry = new Date(); expiry.setDate(expiry.getDate() + keyData.durationDays);
-        keyData.status = "Active"; keyData.hwid = hwid; keyData.expiryDate = expiry.toISOString();
-        writeJSON(DB_FILE, db);
+        keyData.status = "Active"; keyData.hwid = hwid; keyData.expiryDate = expiry;
+        await keyData.save();
         return res.json({ status: "success", message: "Activated!", expiry: keyData.expiryDate });
     }
 
@@ -218,5 +130,16 @@ app.post('/api/validate', apiLimiter, (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Server running on ${PORT}`));
+// Admin Account Auto-Create logic
+async function initAdmin() {
+    const adminExists = await User.findOne({ username: "admin" });
+    if (!adminExists) {
+        // Apna khud ka ID PASSWORD Yahan Set Karein 👇
+        await User.create({ username: "Admin", password: "Baba@123", role: "admin", status: "active" });
+        console.log("Admin account created!");
+    }
+}
+mongoose.connection.once('open', () => initAdmin());
+
+app.listen(process.env.PORT || 5000, '0.0.0.0', () => console.log("Server Running..."));
+    
